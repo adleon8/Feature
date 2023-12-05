@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 public class PlayerJumping : MonoBehaviour
 {
     [SerializeField] float jumpSpeed = 5f;
-    [SerializeField] float jumpPressBufferTime = .05f;
+    [SerializeField] float jumpPressBufferTime = .1f;
     [SerializeField] float jumpGroundGraceTime = .2f; // This and all the grace time mechanics are added so that player doesn't have to time their jumping off ledges. 
 
     Player player;
@@ -44,19 +44,27 @@ public class PlayerJumping : MonoBehaviour
     {
         // Checks if the player tried to jump no longer that jump press buffer time.
         bool wasTryingToJump = Time.time - lastJumpPressTime < jumpPressBufferTime;
+        //Debug.Log(wasTryingToJump);
+        
         // Checks if the player was just grounded.
         bool wasGrounded = Time.time - lastGroundedTime < jumpGroundGraceTime;
+        //Debug.Log(wasGrounded);
+
+        
         // then check if player tried to jump recently.
         bool isOrWasTryingToJump = tryingToJump || (wasTryingToJump && player.IsGrounded);
+        Debug.Log(isOrWasTryingToJump);
+        /*
         // Checks if both.
         bool isOrWasGrounded = player.IsGrounded || wasGrounded;
 
         if (isOrWasTryingToJump && isOrWasGrounded)
         {
+
             player.velocity.y += jumpSpeed;
         }
 
-        tryingToJump = false;
+        tryingToJump = false; */
     }
 
     void OnGroundStateChange(bool isGrounded)
