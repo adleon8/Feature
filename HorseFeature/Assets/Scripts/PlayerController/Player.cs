@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System;
 
 public class Player : MonoBehaviour
 {
@@ -12,18 +13,44 @@ public class Player : MonoBehaviour
     [SerializeField] float acceleration = 20f;
     [SerializeField] Transform cameraTransform;
 
+    // Allows it to be accessed but doesn't expose controller.
+    public bool IsGrounded => controller.isGrounded;
+
+    // Sets player's height.
+    public float Height
+    {
+        get => controller.height;
+        set => controller.height = value;
+    }
+    
+    // Sets player's radius.
+    public float Radius
+    {
+        get => controller.radius;
+        set => controller.radius = value;
+    }
+
+    public event Action OnBeforeMove;
+    public event Action<bool> OnGroundStateChange; // Takes a boolean 'cause it is the current ground state.
+
+    // Visible only to the current assembly.
+    internal float movementSpeedMultiplier;
+
     // To have the ability to look around.
     Vector2 look;
     // Character controler reference.
     CharacterController controller;
     // Player's velocity.
-    Vector3 velocity;
+    internal Vector3 velocity;
+
+    // For grounding.
+    bool wasGrounded;
 
     // Input system.
     PlayerInput playerInput;
     InputAction moveAction;
     InputAction lookAction;
-    InputAction jumpAction;
+    InputAction sprintAction;
 
     private void Awake()
     {
@@ -34,7 +61,8 @@ public class Player : MonoBehaviour
         playerInput = GetComponent<PlayerInput>();
         moveAction = playerInput.actions["move"];
         lookAction = playerInput.actions["look"];
-        jumpAction = playerInput.actions["jump"];
+        //jumpAction = playerInput.actions["jump"];
+        sprintAction = playerInput.actions["sprint"];
 
     }
     private void Start()
@@ -44,21 +72,25 @@ public class Player : MonoBehaviour
 
     private void FixedUpdate()
     {
+        GroundUpdate();
+        Gravity();
         Movement();
         Look();
-        Gravity();
+        
     }
     
-    // STAY HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     private void SlopeSliding()
     {
-        //if (Is)
+        if (IsGrounded)
+        {
+            // Calculates center of the sphere
+            //var
+        }
     }
 
     private void GroundUpdate()
     {
         SlopeSliding();
-
         if (wasGrounded != IsGrounded)
         {
             OnGroundStateChange?.Invoke(IsGrounded);
@@ -72,7 +104,7 @@ public class Player : MonoBehaviour
         var gravity = Physics.gravity * mass * Time.deltaTime;
 
         // Determines vertical velocity.
-        velocity.y = controller.isGrounded ? -1f : velocity.y + gravity.y;
+        velocity.y = IsGrounded ? -1f : velocity.y + gravity.y;
     }
 
     Vector3 GetMovementInput()
@@ -92,6 +124,9 @@ public class Player : MonoBehaviour
         // Clamping it to 1 so the vector doesn't move faster diagonally than normally. 
         input = Vector3.ClampMagnitude(input, 1f);
 
+        // Applies the multiplier to the normal movement speed to increase it and sprint. 
+        input *= movementSpeed * movementSpeedMultiplier;
+
         // Takes in player's input and activates a smoother movement.
         input *= movementSpeed;
 
@@ -100,6 +135,12 @@ public class Player : MonoBehaviour
 
     private void Movement()
     {
+        // Sets the value for the multiplier.
+        movementSpeedMultiplier = 1.5f;
+        
+        // Allows external scripts to have access to the player controller's cycle. 
+        OnBeforeMove?.Invoke();
+
         var input = GetMovementInput();
 
         // Uses acceleration to prevent player's movement from looking too abrupt.
@@ -107,14 +148,6 @@ public class Player : MonoBehaviour
         var factor = acceleration * Time.deltaTime;
         velocity.x = Mathf.Lerp(velocity.x, input.x, factor);
         velocity.z = Mathf.Lerp(velocity.z, input.z, factor);
-
-        // Allows jumping.
-        var jumpInput = jumpAction.ReadValue<float>();
-        if (jumpInput > 0 && controller.isGrounded)
-        {
-            // Add the jumping height to the y axis velocity to lift player off the ground.
-            velocity.y += jumpSpeed;
-        }
 
         // Moves the player but uses the controller instead.
         controller.Move(velocity * Time.deltaTime);
