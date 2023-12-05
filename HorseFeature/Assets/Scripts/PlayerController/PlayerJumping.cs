@@ -5,9 +5,9 @@ using UnityEngine.InputSystem;
 
 public class PlayerJumping : MonoBehaviour
 {
-    [SerializeField] float jumpSpeed = 5f;
-    [SerializeField] float jumpPressBufferTime = .1f;
-    [SerializeField] float jumpGroundGraceTime = .2f; // This and all the grace time mechanics are added so that player doesn't have to time their jumping off ledges. 
+    [SerializeField] float jumpSpeed = 10f;
+    [SerializeField] float jumpPressBufferTime = .01f;
+    [SerializeField] float jumpGroundGraceTime = .02f; // This and all the grace time mechanics are added so that player doesn't have to time their jumping off ledges. 
 
     Player player;
 
@@ -32,12 +32,19 @@ public class PlayerJumping : MonoBehaviour
         player.OnBeforeMove -= OnBeforeMove;
     }
 
-    private void OnJump()
+    public void OnJump(InputAction.CallbackContext context) // This determines the context of the press, checking if it was starting to press, druing, after.
     {
-        tryingToJump = true;
-
-        // Sets it to the current time.
-        lastJumpPressTime = Time.time;
+        if (context.performed)
+        {
+            tryingToJump = true;
+            // Sets it to the current time.
+            lastJumpPressTime = Time.time;
+        }
+        
+        if (context.canceled)
+        {
+            tryingToJump = false;
+        }
     }
 
     void OnBeforeMove()
@@ -48,23 +55,23 @@ public class PlayerJumping : MonoBehaviour
         
         // Checks if the player was just grounded.
         bool wasGrounded = Time.time - lastGroundedTime < jumpGroundGraceTime;
-        //Debug.Log(wasGrounded);
+        //Debug.Log(tryingToJump);
 
         
         // then check if player tried to jump recently.
         bool isOrWasTryingToJump = tryingToJump || (wasTryingToJump && player.IsGrounded);
         Debug.Log(isOrWasTryingToJump);
-        /*
+        
         // Checks if both.
         bool isOrWasGrounded = player.IsGrounded || wasGrounded;
 
         if (isOrWasTryingToJump && isOrWasGrounded)
         {
-
+            Debug.Log("Lol");
             player.velocity.y += jumpSpeed;
         }
 
-        tryingToJump = false; */
+        tryingToJump = false; 
     }
 
     void OnGroundStateChange(bool isGrounded)

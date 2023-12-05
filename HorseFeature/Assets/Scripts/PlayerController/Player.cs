@@ -6,11 +6,11 @@ using System;
 
 public class Player : MonoBehaviour
 {
-    [SerializeField] float mouseSensitivity = 7f;
-    [SerializeField] float movementSpeed = 5f;
-    [SerializeField] float jumpSpeed = 5f;
+    [SerializeField] float mouseSensitivity = 30f;
+    [SerializeField] float movementSpeed = 3f;
+    [SerializeField] float jumpSpeed = 10f;
     [SerializeField] float mass = 1f;
-    [SerializeField] float acceleration = 20f;
+    [SerializeField] float acceleration = 10f;
     [SerializeField] Transform cameraTransform;
 
     // Allows it to be accessed but doesn't expose controller.
