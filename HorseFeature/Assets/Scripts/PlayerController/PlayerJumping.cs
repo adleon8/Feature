@@ -5,9 +5,9 @@ using UnityEngine.InputSystem;
 
 public class PlayerJumping : MonoBehaviour
 {
-    [SerializeField] float jumpSpeed = 10f;
+    [SerializeField] float jumpSpeed = 8.5f;
     [SerializeField] float jumpPressBufferTime = .01f;
-    [SerializeField] float jumpGroundGraceTime = .02f; // This and all the grace time mechanics are added so that player doesn't have to time their jumping off ledges. 
+    [SerializeField] float jumpGroundGraceTime = .2f; // This and all the grace time mechanics are added so that player doesn't have to time their jumping off ledges. 
 
     Player player;
 
@@ -60,15 +60,16 @@ public class PlayerJumping : MonoBehaviour
         
         // then check if player tried to jump recently.
         bool isOrWasTryingToJump = tryingToJump || (wasTryingToJump && player.IsGrounded);
-        Debug.Log(isOrWasTryingToJump);
+        //Debug.Log(isOrWasTryingToJump);
         
         // Checks if both.
         bool isOrWasGrounded = player.IsGrounded || wasGrounded;
 
         if (isOrWasTryingToJump && isOrWasGrounded)
         {
-            Debug.Log("Lol");
-            player.velocity.y += jumpSpeed;
+            //Debug.Log("Lol");
+            //player.velocity.y += jumpSpeed;
+            player.velocity = new Vector3(player.velocity.x, jumpSpeed, player.velocity.z) ;
         }
 
         tryingToJump = false; 

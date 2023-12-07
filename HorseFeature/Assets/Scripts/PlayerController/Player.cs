@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 using UnityEngine.InputSystem;
 using System;
 
@@ -8,7 +9,6 @@ public class Player : MonoBehaviour
 {
     [SerializeField] float mouseSensitivity = 30f;
     [SerializeField] float movementSpeed = 3f;
-    [SerializeField] float jumpSpeed = 10f;
     [SerializeField] float mass = 1f;
     [SerializeField] float acceleration = 10f;
     [SerializeField] Transform cameraTransform;
@@ -61,7 +61,6 @@ public class Player : MonoBehaviour
         playerInput = GetComponent<PlayerInput>();
         moveAction = playerInput.actions["move"];
         lookAction = playerInput.actions["look"];
-        //jumpAction = playerInput.actions["jump"];
         sprintAction = playerInput.actions["sprint"];
 
     }
@@ -78,13 +77,66 @@ public class Player : MonoBehaviour
         Look();
         
     }
+
+    Action OnNextDrawGizmos;
+    void OnDrawGizmos()
+    {
+        // For drawing the lines for debugging.
+        OnNextDrawGizmos?.Invoke();
+        OnNextDrawGizmos= null;
+    }
     
     private void SlopeSliding()
     {
         if (IsGrounded)
         {
-            // Calculates center of the sphere
-            //var
+
+            // Calculates center of the sphere.
+            var sphereVerticalOffset = controller.height / 2 - controller.radius;
+            //Debug.Log(sphereVerticalOffset);
+
+            // Gets world coordinates to subtract from player's position.
+            var castOrigin = transform.position - new Vector3(0, sphereVerticalOffset, 0);
+            //Debug.Log(castOrigin);
+
+            // Sphere cast. Casting 5 meters down. ~ Means bitwise not, anything that is not in the Player layer. 
+            if (Physics.SphereCast(castOrigin, controller.radius - .01f, Vector3.down,
+                out var hit, .1f, ~LayerMask.GetMask("Player"), QueryTriggerInteraction.Ignore))
+            {
+                //Debug.Log("It's workin'");
+                // If the casts hits anything.
+                var collider = hit.collider;
+                //Debug.Log(collider); // What it's colliding against. 
+                // Takes the angle of the up vector and the normal vector and assigns it a variable.
+                var angle = Vector3.Angle(Vector3.up, hit.normal);
+                //Debug.Log(angle); // The angle of the terrain currently standing on.
+
+                /* Debugs by visualizing the vector. 
+                Debug.DrawLine(hit.point, hit.point + hit.normal, Color.black, 3f, false);
+                OnNextDrawGizmos += () =>
+                {
+                    GUI.color = Color.black;
+                    Handles.Label(transform.position + new Vector3(0, 2f, 0), "Angle: " + angle.ToString());
+                }; */
+
+                // If angle is greater than the controller's slope limit, make the player slide. 
+                if (angle > controller.slopeLimit)
+                {
+
+                       //Debug.Log("It will slide!");
+                       var normal = hit.normal;
+                       //Debug.Log(normal);
+                       var yInverse = 14f - normal.y;
+
+                       velocity.x += yInverse * normal.x;
+                       velocity.z += yInverse * normal.z;
+                    
+                }
+            }
+            else // Only for debugging. 
+            {
+                //Debug.Log("It's not workin'");
+            }
         }
     }
 
